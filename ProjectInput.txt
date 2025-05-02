@@ -1,0 +1,25 @@
+N: 1000
+G: 10
+Bins: 100
+Width: 1
+Height: 1.2
+Source x: 2
+Source y: 0
+Number of Materials: 3
+Material 1:
+    Scatter: 1,10,0
+    Capture: 0.01,0.05,0.1
+    Fission: 0,0,0
+    Nu: 0
+
+Material 2:
+    Scatter: 0.01,1,1
+    Capture: 0.01,0.1,20
+    Fission: 0.01,0.1,20
+    Nu: 2.5
+
+Material 3:
+    Scatter: 1,1,1
+    Capture: 0.01,0.1,1
+    Fission: 0,0,0
+    Nu: 0
