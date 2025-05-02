@@ -3,7 +3,7 @@ G: 10
 Bins: 100
 Width: 1
 Height: 1.2
-Source x: 2
+Source x: 0
 Source y: 0
 Number of Materials: 3
 Material 1:

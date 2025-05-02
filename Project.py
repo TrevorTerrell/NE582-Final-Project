@@ -1,4 +1,5 @@
 import numpy as np
+ran = np.random.default_rng()
 
 class crossSection():
     def __init__(self, num_mat, file):
@@ -32,7 +33,58 @@ class crossSection():
             self.nu = float(line)
 
             line = file.readline()
+
+        self.tot = np.sum(self.s + self.c + self.f, 0)
             
+class neutron():
+    def __init__(self, x, y, xsec: type[crossSection]):
+        self.e = 0
+        self.x = x
+        self.y = y
+        self.r = -np.log(1 - ran.random())/xsec.tot[self.e]
+        self.mu = (1 - ran.random()) * (ran.integers(0,2) * 2 - 1)
+        self.eta = (1 - ran.random()) * (ran.integers(0,2) * 2 - 1)
+        norm_factor = np.sqrt(np.pow(self.mu, 2) + np.pow(self.eta, 2))
+        self.mu /= norm_factor
+        self.eta /= norm_factor
+        del norm_factor
+
+    def new_r(self, xsec: type[crossSection]):
+        self.r = -np.log(1 - ran.random())/xsec.tot[self.e]
+    
+    def new_dir(self):
+        self.mu = (1 - ran.random()) * (ran.integers(0,2) * 2 - 1)
+        self.eta = (1 - ran.random()) * (ran.integers(0,2) * 2 - 1)
+        norm_factor = np.sqrt(np.pow(self.mu, 2) + np.pow(self.eta, 2))
+        self.mu /= norm_factor
+        self.eta /= norm_factor
+        del norm_factor
+
+    def reflect_x(self):#reflecting on x = right boundary
+        self.mu = - self.mu
+
+    def reflect_y(self):
+        self.eta = - self.eta
+
+    def collType(self, xsec):
+        val = ran.random() * xsec.tot[self.e]
+        j = 0
+        if val < np.sum(xsec.s[:, self.e]):
+            for i in np.arange(len(xsec.s[:, self.e])):
+                if val > np.sum(xsec.s[:(i + 1), self.e]):
+                    j += 1
+            return 0, j
+        elif val < np.sum(xsec.s[:, self.e]) + np.sum(xsec.c[:, self.e]):
+            val -= np.sum(xsec.s[:, self.e])
+            for i in np.arange(len(xsec.c[:, self.e])):
+                if val > np.sum(xsec.c[:(i + 1), self.e]):
+                    j += 1
+            return 1, j
+        elif val < np.sum(xsec.s[:, self.e]) + np.sum(xsec.c[:, self.e]) + np.sum(xsec.f[:, self.e]):
+            val -= np.sum(xsec.s[:, self.e]) + np.sum(xsec.c[:, self.e])
+            for i in np.arange(len(xsec.f[:, self.e])):
+                if val > np.sum(xsec.f[:(i + 1), self.e]):
+                    j += 1        
 
 
 
