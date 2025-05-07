@@ -36,6 +36,7 @@ class crossSection():
             line = file.readline()
 
         assert np.sum(self.s, 0)[2] == 0, "Scattering cross sections in group 3 must be 0"
+        assert np.sum(self.f) > 0, "Fission cross sections must be grater than 0"
 
         self.tot = np.sum(self.s + self.c + self.f, 0)
 
@@ -243,9 +244,9 @@ def simulate(num_hist, num_gen, num_bins, source_x, source_y, x_edge, y_edge, xs
             temp = np.flip(np.arange(int(len(pop_next_gen[0,:])/2)) * 2, 0)
             for i in temp:
                 pop_next_gen = np.delete(pop_next_gen, i, 1)
-        if len(pop_this_gen[0,:]) < num_hist / 2:#raise the population to prevent botteming out
-            print(f'Cloning Population...')
-            pop_next_gen = np.append(pop_next_gen, pop_next_gen, 1)
+        while len(pop_next_gen[0,:]) < num_hist * 2/3:#raise the population to prevent botteming out
+            print(f'\tCloning Population...')
+            pop_next_gen = np.append(pop_next_gen, np.append(pop_next_gen, pop_next_gen, 1), 1)
         del pop_this_gen
         pop_this_gen = np.copy(pop_next_gen)
         pop_next_gen = np.zeros((2,0))

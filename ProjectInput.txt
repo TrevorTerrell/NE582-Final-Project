@@ -15,7 +15,7 @@ Material 1:
 Material 2:
     Scatter: 0.01,1,0
     Capture: 0.01,0.1,20
-    Fission: 0.01,0.1,10
+    Fission: 0.01,0.01,0
     Nu: 2.5
 
 Material 3:
