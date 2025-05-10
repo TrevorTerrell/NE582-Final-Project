@@ -109,10 +109,17 @@ class tally():
         y_ref = np.ones(bins) * ymax / bins
         y_ref = np.cumsum(y_ref)
         self.Y_REF = y_ref
+        self.k_sq = 0
 
     def normalize(self, num_hist):
         self.flux /= num_hist * self.X_REF[0] * self.Y_REF[0]
         self.fis /= num_hist * self.X_REF[0] * self.Y_REF[0]
+
+    def error_prop(self, hist_before, hist_after):
+        self.k_sq /= hist_before
+        self.k = hist_after / hist_before
+        self.k_err = np.sqrt(np.abs(self.k_sq - np.pow(self.k, 2))/hist_before)
+        del self.k_sq
 
 def MCTMa(n: type[neutron], gen_n: type[list], xsec: type[crossSection], tallies: type[tally]):
     n.x += n.r * n.mu
@@ -163,8 +170,11 @@ def MCTMa(n: type[neutron], gen_n: type[list], xsec: type[crossSection], tallies
             tallies.flux[n.e, i, j] += 1/xsec.f[m, n.e]
             #save neutron birth positions
             array = np.array([[n.x], [n.y]])
+            new = 0
             for k in np.arange(xsec.get_nu(m)):
                 gen_n = np.append(gen_n, array, 1)
+                new += 1
+            tallies.k_sq += np.pow(new, 2)
             return gen_n
         
 def MCTMi(n: type[neutron], gen_n: type[list], xsec: type[crossSection], tallies: type[tally]):
@@ -214,9 +224,14 @@ def MCTMi(n: type[neutron], gen_n: type[list], xsec: type[crossSection], tallies
                 gen_n = np.append(gen_n, array, 1)
             return gen_n
 
-def simulate(num_hist, num_gen, num_bins, source_x, source_y, x_edge, y_edge, xsec):
+def simulate(num_hist, num_gen, num_bins, source_x, source_y, x_edge, y_edge, xsec, is_unifrom):
     xs = np.ones(num_hist) * source_x
     ys = np.ones(num_hist) * source_y
+    if is_unifrom:
+        for i in np.arange(num_hist):
+            xs[i] = ran.random() * x_edge
+            ys[i] = ran.random() * y_edge
+    
     pop_this_gen = np.array((xs,ys))
     del xs
     del ys
@@ -231,6 +246,7 @@ def simulate(num_hist, num_gen, num_bins, source_x, source_y, x_edge, y_edge, xs
                 n = neutron(pop_this_gen[0,i], pop_this_gen[1,i], xsec)
                 pop_next_gen = MCTMa(n, pop_next_gen, xsec, tallies)
             tallies.normalize(len(pop_this_gen[0,:]))
+            tallies.error_prop(len(pop_this_gen[0,:]), len(pop_next_gen[0,:]))
 
         else:#Inactive
             for i in np.arange(len(pop_this_gen[0,:])):
@@ -239,9 +255,9 @@ def simulate(num_hist, num_gen, num_bins, source_x, source_y, x_edge, y_edge, xs
             tallies.normalize(len(pop_this_gen[0,:]))
 
         print(f'{g}: k = {len(pop_next_gen[0,:])/len(pop_this_gen[0,:])}, N = {len(pop_this_gen[0,:])}')
-        if len(pop_this_gen[0,:]) > num_hist * 2:#lower the population to prevent long simulation times
+        while len(pop_next_gen[0,:]) > num_hist * 1.5:#lower the population to prevent exponential growth
             print(f'\tCulling Population...')
-            temp = np.flip(np.arange(int(len(pop_next_gen[0,:])/2)) * 2, 0)
+            temp = np.flip(np.arange(int(len(pop_next_gen[0,:])/3))*3, 0)
             for i in temp:
                 pop_next_gen = np.delete(pop_next_gen, i, 1)
         while len(pop_next_gen[0,:]) < num_hist * 2/3:#raise the population to prevent botteming out
@@ -286,17 +302,23 @@ xsec = crossSection(num_mat, file)
 del file
 del line
 
+unifrom_gen_1 = False
+
 assert d_x > 0, "System width must be grater than 0."
 assert d_y > 0, "System height must be grater than 0."
-assert (x0 >= 0) & (x0 <= d_x) & (y0 >= 0) & (y0 <= d_y), "Initial source location must be in bounds."
+if (x0 == -1) & (y0 == -1):
+    unifrom_gen_1 = True
+else:
+    assert (x0 >= 0) & (x0 <= d_x) & (y0 >= 0) & (y0 <= d_y), "Initial source location must be in bounds."
 
 
 print('Simulating...')
-tallies = simulate(hist, gen, bins, x0, y0, d_x, d_y, xsec)
+tallies = simulate(hist, gen, bins, x0, y0, d_x, d_y, xsec, unifrom_gen_1)
 total_flux = np.sum(tallies.flux, 0)
 
 plt.figure(0)
-plt.imshow(total_flux, norm = 'log', vmin = np.min(total_flux), vmax = np.max(total_flux), origin = 'lower')
+mi = np.maximum(np.min(total_flux), np.max(total_flux)*1e-10)
+plt.imshow(total_flux, norm = 'log', vmin = mi, vmax = np.max(total_flux), origin = 'lower')
 locs, labels = plt.xticks()
 locs = np.delete(locs, 0)
 labels = np.delete(labels, 0)
@@ -313,3 +335,5 @@ labels = [float(i)*d_y/bins for i in locs]
 plt.yticks(locs, labels)
 plt.colorbar()
 plt.show()
+
+print(f'k = {tallies.k} +/- {tallies.k_err}')

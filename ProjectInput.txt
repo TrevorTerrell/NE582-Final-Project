@@ -1,10 +1,10 @@
-N: 10240
-G: 20
+N: 32768
+G: 5
 Bins: 30
 Width: 3
 Height: 3
-Source x: 2
-Source y: 2
+Source x: -1
+Source y: -1
 Number of Materials: 3
 Material 1:
     Scatter: 1,10,0
@@ -15,8 +15,8 @@ Material 1:
 Material 2:
     Scatter: 0.01,1,0
     Capture: 0.01,0.1,20
-    Fission: 0.01,0.01,0
-    Nu: 2.5
+    Fission: 0.01,0.5,20
+    Nu: 6.9
 
 Material 3:
     Scatter: 1,3,0
