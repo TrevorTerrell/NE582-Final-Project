@@ -1,6 +1,6 @@
 # NE582-Final-Project
 Input can be changed via the "ProjectInput.txt" file. When changing the input file, only change the numbers unless you are adding more materials to the homogeneous material. The program clones and culls neutrons between generations so that the population stays between 2/3 and 2 times the initial population. Culling is done by removing every third neutron from the population and cloning is done by duplicating the population until the population is reasonable. The program can be run by cloning the repository using the GitHub extension in VS Code. The program will print out the multiplication factor and population for each generation. After the final generation, the program will display the flux using a heat map and the neutron multiplication with error.
 
-The program can be run for any number of generations allowing the flux to propagate. The initial flux can be a point source located at "Source x: <x position> // Source y: <y position>" or a uniform distribution, set by changing <x position> and <y position> to -1.
+The program can be run for any number of generations allowing the flux to propagate. The initial flux can be a point source located at "Source x: \<x position\> // Source y: \<y position\>" or a uniform distribution, set by changing <x position> and <y position> to -1.
 
 This project was created for my Final in my Monte Carlo Solutions for Neutron Transport class.
